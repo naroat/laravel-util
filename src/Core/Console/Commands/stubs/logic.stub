@@ -1,0 +1,25 @@
+<?php
+namespace DummyNamespace;
+
+
+class DummyClass
+{
+
+    public static function index()
+    {
+
+    }
+    public static function create()
+    {
+
+    }
+    public static function update()
+    {
+
+    }
+    public static function destroy()
+    {
+
+    }
+
+}
