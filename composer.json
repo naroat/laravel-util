@@ -1,0 +1,22 @@
+{
+    "name": "taoran/laravel-util",
+    "description": "taoran laravel util",
+    "keywords": ["package", "laravel", "util"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "taoran",
+            "email": "15013070796@163.com"
+        }
+    ],
+    "require": {
+        "php": ">7.0.0",
+        "laravel/framework": "~5.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Taoran\\Laravel\\": "src/",
+            "App\\Exceptions\\": "src/Exception"
+        }
+    }
+}
