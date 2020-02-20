@@ -3,15 +3,15 @@
 /**
  * 人民币转换大写
  */
-if (!function_exists('RMB_Upper')) {
-    function RMB_Upper($num)
+if (!function_exists('rmb_upper')) {
+    function rmb_upper($num)
     {
         $num = round($num,2);  //取两位小数
         $num = ''.$num;  //转换成数字
         $arr = explode('.',$num);
 
-        $str_left = $arr[0]; // 12345
-        $str_right = $arr[1] ?? 0; // 67
+        $str_left = $arr[0];
+        $str_right = $arr[1] ?? 0;
 
         $len_left = strlen($str_left); //小数点左边的长度
         $len_right = strlen($str_right); //小数点右边的长度
