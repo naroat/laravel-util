@@ -1,25 +1,7 @@
 <?php
-namespace DummyNamespace;
+namespace {{namespace}};
 
-
-class DummyClass
+class {{class_name}}
 {
-
-    public static function index()
-    {
-
-    }
-    public static function create()
-    {
-
-    }
-    public static function update()
-    {
-
-    }
-    public static function destroy()
-    {
-
-    }
 
 }
