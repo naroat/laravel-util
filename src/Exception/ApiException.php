@@ -50,16 +50,22 @@ class ApiException extends \Exception
             $data = ExceptionHandler::formatApiData($this);
             return response()->json($data, $http_code, [], JSON_UNESCAPED_UNICODE);
         } else {
-
-            return response()->view('jialeo-package::exception', [
-                'error_msg' => $this->getMessage(),
-                'debug' => config('app.debug') == 'true' ? [
-                    'type' => get_class($this),
-                    'line' => $this->getLine(),
-                    'file' => $this->getFile(),
-                    'trace' => explode("\n", $this->getTraceAsString())
-                ] : ''
-            ], $http_code);
+            $trace = explode("\n", $this->getTraceAsString());
+            $type = get_class($this);
+            $error_html = '<html><header><title>出错了！</title></header><body>';
+            $error_html .= "<h1>出错了！</h1>";
+            $error_html .= "<h2>错误信息:{$this->getMessage()}</h2>";
+            $error_html .= '<div><div>';
+            $error_html .= "<h3>file:  {$this->getFile()}</h3>";
+            $error_html .= "<h3>line:  {$this->getLine()}</h3>";
+            $error_html .= "<h3>type:  {$type}</h3>";
+            foreach ($trace as $val) {
+                $error_html .= "<p>{$val}</p>";
+                $error_html .= "<hr>";
+            }
+            $error_html .= '</div></div></body></html>';
+            echo $error_html;
+            exit;
         }
     }
 
