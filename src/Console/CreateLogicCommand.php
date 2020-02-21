@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace Taoran\Laravel\Console;
 
 use Illuminate\Console\Command;
 
@@ -47,7 +47,7 @@ class CreateLogicCommand extends Command
         $namespace = 'App\Logic\Api';
 
         //类名
-        $args_name = '';
+        $args_name = $args['name'];
         if (strstr($args['name'], '/')) {
             $ex = explode('/', $args['name']);
             $args_name = $ex[count($ex)-1];
