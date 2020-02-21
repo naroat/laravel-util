@@ -18,5 +18,12 @@
             "Taoran\\Laravel\\": "src/",
             "App\\Exceptions\\": "src/Exception"
         }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Taoran\\Laravel\\Console\\ConsoleProvider"
+            ]
+        }
     }
 }
