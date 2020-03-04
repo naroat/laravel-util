@@ -22,7 +22,8 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Taoran\\Laravel\\Console\\ConsoleProvider"
+                "Taoran\\Laravel\\Console\\ConsoleProvider",
+                "Taoran\\Laravel\\Helper\\HelperProvider"
             ]
         }
     }
