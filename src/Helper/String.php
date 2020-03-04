@@ -21,15 +21,11 @@ if (!function_exists('rmb_upper')) {
         {
             $arr_left[] = substr($str_left,$i,1);
         }
-        //print_r($arr_left);
-        //output:Array ( [0] => 1 [1] => 2 [2] => 3 [3] => 4 [4] => 5 )
 
         for($i=0;$i<$len_right;$i++)
         {
             $arr_right[] = substr($str_right,$i,1);
         }
-        //print_r($arr_right);
-        //output：Array ( [0] => 6 [1] => 7 )
 
         //构造数组$daxie
         $daxie = array(
@@ -64,8 +60,6 @@ if (!function_exists('rmb_upper')) {
                     $arr_left[$k] .= '元';break;
             }
         }
-        //print_r($arr_left);
-        //output :Array ( [0] => 壹万 [1] => 贰千 [2] => 叁百 [3] => 肆十 [4] => 伍元 )
 
         foreach($arr_right as $k =>$v)
         {
@@ -78,17 +72,12 @@ if (!function_exists('rmb_upper')) {
                     $arr_right[$k] .= '分';break;
             }
         }
-        //print_r($arr_right);
-        //output :Array ( [0] => 陆角 [1] => 柒分 )
 
         //将数组转换成字符串，并拼接在一起
         $new_left_str = implode('',$arr_left);
         $new_right_str = implode('',$arr_right);
 
         $new_str = $new_left_str.$new_right_str;
-
-        //echo $new_str;
-        //output :'壹万贰千叁百肆十伍元陆角柒分'
 
         //如果金额中带有0，大写的字符串中将会带有'零千零百零十',这样的字符串，需要替换掉
         $new_str = str_replace('零万','零',$new_str);
@@ -98,9 +87,9 @@ if (!function_exists('rmb_upper')) {
         $new_str = str_replace('零零零','零',$new_str);
         $new_str = str_replace('零零','零',$new_str);
         $new_str = str_replace('零元','元',$new_str);
-
-
-        //echo'<br/>';
+        if ($new_str == "元零分") {
+            $new_str = '零元零分';
+        }
         return $new_str;
     }
 }
