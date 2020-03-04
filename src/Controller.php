@@ -11,9 +11,8 @@ use App\Exceptions\ApiException;
  */
 trait Controller
 {
-
     /**
-     * 应答数据api
+     * 数据api
      * @param array || Collection || Object $data
      * @param array $list
      * @return \Illuminate\Http\JsonResponse
@@ -33,7 +32,7 @@ trait Controller
     }
 
     /**
-     * 应答列表数据api
+     * 列表数据api
      * @param array $list
      * @return \Illuminate\Http\JsonResponse
      */
