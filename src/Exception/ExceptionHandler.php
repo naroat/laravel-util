@@ -115,7 +115,7 @@ class ExceptionHandler
             'http_code' => $http_code,
             'data' => [],
             'list' => [],
-            'request_id' => app()->make('request_id')
+            //'request_id' => app()->make('request_id')
         ];
 
         config('app.debug') == 'true' ? $data['debug'] = [
