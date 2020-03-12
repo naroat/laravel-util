@@ -12,3 +12,14 @@ if (!function_exists('response_json')) {
         return response()->json($data, $code, $list, JSON_UNESCAPED_UNICODE);
     }
 }
+if (!function_exists('verify')) {
+    function verify($request, $data)
+    {
+        $validator = Validator::make($request->all(), $data);
+
+        //验证失败
+        if ($validator->fails()) throw new \App\Exceptions\ApiException($validator->errors()->first());
+
+        return $request->all();
+    }
+}
