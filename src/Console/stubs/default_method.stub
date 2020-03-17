@@ -1,0 +1,34 @@
+    public static function index()
+    {
+
+    }
+
+    public static function create()
+    {
+
+    }
+
+    public static function store()
+    {
+
+    }
+
+    public static function show()
+    {
+
+    }
+
+    public static function edit()
+    {
+
+    }
+
+    public static function update()
+    {
+
+    }
+
+    public static function destroy()
+    {
+
+    }

@@ -8,17 +8,17 @@ class CreateLogicCommand extends Command
 {
     /**
      * The name and signature of the console command.
-     *
+     * 创建命令名称和参数
      * @var string
      */
-    protected $signature = 'create:logic {name} {--resource=}';
+    protected $signature = 'create:logic {name} {--resource}';
 
     /**
      * The console command description.
-     *
+     * 描述
      * @var string
      */
-    protected $description = 'Logic';
+    protected $description = 'create logic';
 
     /**
      * Create a new command instance.
@@ -70,8 +70,10 @@ class CreateLogicCommand extends Command
 
         //获取模板,替换变量
         $template = file_get_contents(dirname(__FILE__) . '/stubs/logic.stub');
+        $default_method = $option ? file_get_contents(dirname(__FILE__) . '/stubs/default_method.stub') : '';
         $source = str_replace('{{namespace}}', $namespace, $template);
         $source = str_replace('{{class_name}}', $class_name, $source);
+        $source = str_replace('{{default_method}}', $default_method, $source);
 
         //是否已存在相同文件
         if (file_exists($logic_file)) {
@@ -89,11 +91,11 @@ class CreateLogicCommand extends Command
 
         //写入
         if (!file_put_contents($logic_file, $source)) {
-            $this->error('Logic created failed.');
+            $this->error('创建失败！');
             exit;
         }
 
-        $this->info('Logic created successfully.');
+        $this->info('创建成功！');
     }
 
 }
