@@ -109,12 +109,10 @@ class ExceptionHandler
     public static function getJsonData(\Exception $e, $http_code, $error_msg, $error_code = '400')
     {
         $data = [
-            'status' => false,
-            'error_msg' => $error_msg,
-            'error_code' => $error_code,
-            'http_code' => $http_code,
-            'data' => [],
-            'list' => [],
+            'errno' => $error_code,       //
+            'errmsg' => $error_msg,
+            'data' => empty($data) ? null : $data,
+            'runtime' => ''
             //'request_id' => app()->make('request_id')
         ];
 
