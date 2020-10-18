@@ -24,7 +24,8 @@ class HelperProvider extends ServiceProvider
     {
         require_once __DIR__ . '/Core.php';
         require_once __DIR__ . '/String.php';
-
+        require_once __DIR__ . '/Time.php';
+        require_once __DIR__ . '/Password.php';
     }
 
 }
