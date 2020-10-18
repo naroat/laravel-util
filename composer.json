@@ -23,7 +23,8 @@
         "laravel": {
             "providers": [
                 "Taoran\\Laravel\\Console\\ConsoleProvider",
-                "Taoran\\Laravel\\Helper\\HelperProvider"
+                "Taoran\\Laravel\\Helper\\HelperProvider",
+                "Taoran\\Laravel\\Jwt\\JwtAuthProvider"
             ]
         }
     }
