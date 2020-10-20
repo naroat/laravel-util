@@ -11,8 +11,6 @@ use Lcobucci\JWT\ValidationData;
 
 class JwtAuth
 {
-    private static $instance;
-
     // 加密后的token
     private $token;
     // 解析JWT得到的token
@@ -27,22 +25,9 @@ class JwtAuth
     private $aud = '';// 配置访问群体
     private $id = '';//配置ID
 
-    private function __construct() {}
+    public function __construct() {}
 
     private function __clone() {}
-
-    /**
-     * 该类的实例
-     * @return \App\Lib\JwtAuth
-     */
-    public static function getInstance()
-    {
-        if (is_null(self::$instance)) {
-            self::$instance = new self();
-        }
-
-        return self::$instance;
-    }
 
     /**
      * 获取token
@@ -193,7 +178,7 @@ class JwtAuth
         $token = $this->encode();
         return array(
             'result' => true,
-            'token' => $token
+            'token' => (string)$token
         );
     }
 
