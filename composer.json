@@ -12,7 +12,8 @@
     "require": {
         "php": "^7.2",
         "lcobucci/jwt": "^3.3",
-        "laravel/framework": ">=6.0"
+        "laravel/framework": ">=6.0",
+        "phpunit/phpunit": "^9.4"
     },
     "autoload": {
         "psr-4": {

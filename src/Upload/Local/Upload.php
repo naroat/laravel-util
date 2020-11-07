@@ -8,9 +8,11 @@ use Taoran\Laravel\Upload\UploadInterface;
 
 class Upload implements UploadInterface
 {
-    public function upload()
+    public function upload($file)
     {
-        dd('local');
+        $path = $file->store('images');
+
+        return $path;
     }
 
     public function download()
