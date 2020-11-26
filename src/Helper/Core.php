@@ -115,3 +115,23 @@ if (!function_exists('rm_dir')) {
         @rmdir($path);
     }
 }
+
+
+/**
+ * 设置保存的数据
+ * @param Object $model
+ * @param array $data
+ * @param array $excepted_key 排除过滤xss的键值
+ * @param array $html_key html内容xss过滤的key
+ * @return object
+ */
+if (!function_exists('set_save_data')) {
+    function set_save_data(\Illuminate\Database\Eloquent\Model $model, array $data)
+    {
+        foreach ($data as $key => $v) {
+            //是否html内容
+            $model->$key = htmlspecialchars($v, ENT_QUOTES);
+        }
+        return $model;
+    }
+}
