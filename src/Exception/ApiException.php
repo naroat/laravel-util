@@ -16,7 +16,7 @@ class ApiException extends \Exception
      * @param string $error_id 错误id
      * @param string $code http状态码
      */
-    public function __construct($message = '', $error_id = 'ERROR', $code = 400, $sentry = false)
+    public function __construct($message = '数据库错误！', $error_id = 'ERROR', $code = 400, $sentry = false)
     {
         parent::__construct($message, $code);
         empty($error_id) || $this->error_id = $error_id;
