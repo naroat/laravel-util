@@ -1,0 +1,11 @@
+<?php
+namespace {{namespace}};
+
+class {{class_name}}
+{
+    protected ${{args_name}};
+    public function __construct()
+    {
+
+    }
+}
