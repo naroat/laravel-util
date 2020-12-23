@@ -1,9 +1,7 @@
 <?php
-namespace App\Exceptions;
+namespace Taoran\Laravel\Exception;
 
-use Psr\Log\LoggerInterface;
-
-class ExceptionHandler
+class Handler
 {
 
     /**
@@ -64,21 +62,14 @@ class ExceptionHandler
     public static function handler($request, \Exception $exception, $obj)
     {
 
-        if ($exception instanceof ApiException) {
-            return $exception->render($request);
-        }
-
         if ($request->header('X-ISAPI') == 1) {
-            if (method_exists($exception, 'getStatusCode')) {
-                $status_code = $exception->getStatusCode();
-            } else {
-                $status_code = 500;
-            }
+
+            $status_code = $exception->getCode() ?? 500;
 
             $error_msg = config('app.debug') && !empty($exception->getMessage()) ? $exception->getMessage() : self::getHttpStatus($status_code);
 
-            //如果是致命异常且是debug模式
-            if ($exception instanceof \Symfony\Component\Debug\Exception\FatalErrorException && config('app.debug')) {
+            //debug模式
+            if (config('app.debug')) {
                 $error_msg = $exception->getMessage();
             }
 
@@ -112,7 +103,7 @@ class ExceptionHandler
             'errno' => $error_code,       //
             'errmsg' => $error_msg,
             'data' => empty($data) ? null : $data,
-            'runtime' => ''
+            //'runtime' => ''
             //'request_id' => app()->make('request_id')
         ];
 
@@ -124,52 +115,5 @@ class ExceptionHandler
         ] : true;
 
         return $data;
-    }
-
-    /**
-     * api抛错数据
-     * @param \App\Exceptions\ApiException $e
-     * @return array
-     */
-    public static function formatApiData(\App\Exceptions\ApiException $e)
-    {
-        $error_code = $e->getErrorId();
-        $error_msg = $e->getMessage();
-        $http_code = $e->getCode();
-
-        $data = self::getJsonData($e, $http_code, $error_msg, $error_code);
-
-        return $data;
-    }
-
-    /**
-     * report
-     * @param \Exception $exception
-     * @throws \Exception
-     */
-    public static function report(\Exception $exception)
-    {
-        //报告异常到sentry
-        if (!function_exists('report_to_sentry')) {
-            throw $exception;
-        }
-
-        report_to_sentry($exception);
-
-        try {
-            $logger = app()->make(LoggerInterface::class);
-        } catch (\Exception $ex) {
-            throw $exception; // throw the original exception
-        }
-
-        $logger->error(
-            $exception->getMessage(),
-            [
-                'exception' => $exception,
-                'request' => request() . "\n\n" . 'request_id:' . app()->make('request_id') . "\n",
-                'get_params' => request()->query->all(),
-                'post_params' => request()->request->all(),
-            ]
-        );
     }
 }
