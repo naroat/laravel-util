@@ -1,10 +1,10 @@
 <?php
 
 
-namespace Taoran\Laravel\Traits;
+namespace Taoran\Laravel;
 
 
-trait Response
+class Response
 {
     /**
      * 错误码
@@ -20,18 +20,18 @@ trait Response
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function responseJson(array $data = [], int $code = 200)
+    public function handle(array $data = [], int $code = 200)
     {
         //响应数据
         $responseData = [
             'errmsg' => $this->code[$code] ?? '',
             'errno' => $code,
             'data' => empty($data) ? null : $data,
-            'runtime' => '0.1 ms'
+            'runtime' => (microtime(true) - LARAVEL_START) . ' ms'
         ];
 
         //debug
-        //!config('app.debug') ? false : $responseData['run_time'] = get_run_time() . ' ms';
+        //!config('app.debug') ? false : $responseData['debug'] = '';
 
         return response()->json($responseData, $code, [], JSON_UNESCAPED_UNICODE);
     }

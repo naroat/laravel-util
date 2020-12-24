@@ -17,13 +17,13 @@
     },
     "autoload": {
         "psr-4": {
-            "Taoran\\Laravel\\": "src/",
-            "App\\Exceptions\\": "src/Exception"
+            "Taoran\\Laravel\\": "src/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
+                "Taoran\\Laravel\\BaseProvider",
                 "Taoran\\Laravel\\Console\\ConsoleProvider",
                 "Taoran\\Laravel\\Helper\\HelperProvider",
                 "Taoran\\Laravel\\Jwt\\JwtAuthProvider"
