@@ -1,25 +1,34 @@
 <?php
+/**
+ * json响应
+ */
 if (!function_exists('response_json')) {
-    function response_json($data = array(), $list = array(), $code = 200)
+    function response_json($data = [], $code = 200)
     {
-        $data = [
-            'errno' => 0,       //
-            'errmsg' => 'ok',
-            'data' => empty($data) ? null : $data,
-            'runtime' => ''
-        ];
-        return response()->json($data, $code, $list, JSON_UNESCAPED_UNICODE);
+        return app()->make('taoran_response')->handle($data, $code);
     }
 }
+
+/**
+ * 参数验证
+ */
 if (!function_exists('verify')) {
-    function verify($request, $data)
+    function verify($method, $rules, $message = [])
     {
-        $validator = Validator::make($request->all(), $data);
+        if ($method == 'GET') {
+            $param = request()->query->all();
+        } else if ($method == 'POST') {
+            $param = request()->request->all();
+        } else {
+            throw new \Taoran\Laravel\Exception\ApiException('验证方式错误!');
+        }
+
+        $validator = \Illuminate\Support\Facades\Validator::make($param, $rules, $message);
 
         //验证失败
-        if ($validator->fails()) throw new \App\Exceptions\ApiException($validator->errors()->first());
+        if ($validator->fails()) throw new \Taoran\Laravel\Exception\ApiException($validator->errors()->first());
 
-        return $request->all();
+        return $param;
     }
 }
 

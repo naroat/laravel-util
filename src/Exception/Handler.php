@@ -61,19 +61,23 @@ class Handler
      */
     public static function handler($request, \Exception $exception, $obj)
     {
-
         if ($request->header('X-ISAPI') == 1) {
-
-            $status_code = $exception->getCode() ?? 500;
-
-            $error_msg = config('app.debug') && !empty($exception->getMessage()) ? $exception->getMessage() : self::getHttpStatus($status_code);
-
+            $reponse = app()->make('taoran_response');
+            $status_code = empty($exception->getCode()) ? 500 : $exception->getCode();
+            $reponse->errmsg = $exception->getMessage() ?? '';
             //debug模式
-            if (config('app.debug')) {
-                $error_msg = $exception->getMessage();
+            if (config('app.debug') == 'true') {
+                $reponse->errmsg = !empty($exception->getMessage()) ? $exception->getMessage() : self::getHttpStatus($status_code);
+                $reponse->exception = config('app.debug') == 'true' ? [
+                    'type' => get_class($exception),
+                    'line' => $exception->getLine(),
+                    'file' => $exception->getFile(),
+                    'trace' => explode("\n", $exception->getTraceAsString())
+                ] : true;
             }
 
-            return response()->json(self::getJsonData($exception, $status_code, $error_msg), $status_code, [], JSON_UNESCAPED_UNICODE);
+            //响应
+            return $reponse->handle([], $status_code);
         } else {
             return $obj->renderByParent($request, $exception);
         }
@@ -87,33 +91,5 @@ class Handler
     public static function getHttpStatus($http_code)
     {
         return isset(self::$httpStatus[$http_code]) ? self::$httpStatus[$http_code] : self::$httpStatus[500];
-    }
-
-    /**
-     * 获取返回数据
-     * @param \Exception $e
-     * @param $http_code
-     * @param $error_msg
-     * @param string $error_code
-     * @return array
-     */
-    public static function getJsonData(\Exception $e, $http_code, $error_msg, $error_code = '400')
-    {
-        $data = [
-            'errno' => $error_code,       //
-            'errmsg' => $error_msg,
-            'data' => empty($data) ? null : $data,
-            //'runtime' => ''
-            //'request_id' => app()->make('request_id')
-        ];
-
-        config('app.debug') == 'true' ? $data['debug'] = [
-            'type' => get_class($e),
-            'line' => $e->getLine(),
-            'file' => $e->getFile(),
-            'trace' => explode("\n", $e->getTraceAsString())
-        ] : true;
-
-        return $data;
     }
 }

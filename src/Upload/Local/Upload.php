@@ -4,20 +4,26 @@
 namespace Taoran\Laravel\Upload\Local;
 
 
+use Taoran\Laravel\Exception\ApiException;
 use Taoran\Laravel\Upload\UploadInterface;
 
 class Upload implements UploadInterface
 {
-    public function upload($file)
+    /**
+     * 上传
+     *
+     * @param $file
+     * @param $filename
+     * @return mixed
+     */
+    public function upload($file, $path, $filename, $acl)
     {
-        $path = $file->store('images');
-
-        return $path;
+        try {
+            $result = $file->move($path, $filename);
+        } catch (\Exception $e) {
+            throw new ApiException($e->getMessage());
+        }
+        //返回路径 + 文件名
+        return '/' . $path . '/' . $filename;
     }
-
-    public function download()
-    {
-
-    }
-
 }
