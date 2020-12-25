@@ -13,7 +13,8 @@
         "php": "^7.2",
         "lcobucci/jwt": "^3.3",
         "laravel/framework": ">=6.0",
-        "phpunit/phpunit": "^8.0"
+        "phpunit/phpunit": "^8.0",
+        "aliyuncs/oss-sdk-php": "^2.4"
     },
     "autoload": {
         "psr-4": {
