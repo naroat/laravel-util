@@ -13,9 +13,9 @@ abstract class Repository
 {
     protected $model;
 
-    public function __construct()
+    public function __construct($model)
     {
-
+        $this->model = $model;
     }
 
     /**
@@ -41,7 +41,7 @@ abstract class Repository
      * @param callable|null $where
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator|Builder|Builder[]|\Illuminate\Database\Eloquent\Collection
      */
-    public function getList(array $param, callable $where = null)
+    public function getList(array $param = [], callable $where = null)
     {
         $orm = $this->model->where('is_on', 1);
 

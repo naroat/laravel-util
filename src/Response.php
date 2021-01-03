@@ -25,12 +25,12 @@ class Response
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function handle(array $data = [], int $code = 200)
+    public function handle($data = [], int $code = 200)
     {
         //响应数据
         $responseData = [
+            'code' => $code,
             'errmsg' => $this->errmsg,
-            'errno' => $code,
             'data' => empty($data) ? null : $data,
             'runtime' => (microtime(true) - LARAVEL_START) . ' ms'
         ];
