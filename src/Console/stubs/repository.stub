@@ -1,11 +1,16 @@
 <?php
 namespace {{namespace}};
 
-class {{class_name}}
+use App\Model\{{args_name}}Model;
+use Taoran\Laravel\Repository;
+use Taoran\Laravel\Exception\ApiException;
+
+class {{class_name}} extends Repository
 {
-    protected ${{args_name}};
+    protected $model;
+
     public function __construct()
     {
-
+        $this->model = new {{args_name}}Model();
     }
 }

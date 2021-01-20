@@ -35,6 +35,23 @@ abstract class Repository
     }
 
     /**
+     * 获取单条 - 通过id
+     *
+     * @param $id
+     * @param callable|null $where
+     * @return mixed
+     */
+    public function getOneById($id, callable $where = null)
+    {
+        $orm = $this->model->where('is_on', 1);
+
+        //自定义条件
+        CallbackTrait::callback($where, $orm);
+
+        return $orm->find($id);
+    }
+
+    /**
      * 获取多条
      *
      * @param array $param
@@ -65,7 +82,7 @@ abstract class Repository
             \DB::rollBack();
             throw new ApiException();
         }
-        return $this->model->id;
+        return $this->model;
     }
 
     /**
@@ -83,7 +100,7 @@ abstract class Repository
             \DB::rollBack();
             throw new ApiException();
         }
-        return $model->id;
+        return $model;
     }
 
     /**

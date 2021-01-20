@@ -29,7 +29,9 @@ class ConsoleProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                \Taoran\Laravel\Console\CreateLogicCommand::class
+                \Taoran\Laravel\Console\CreateLogicCommand::class,
+                \Taoran\Laravel\Console\CreateRepositoryCommand::class,
+                \Taoran\Laravel\Console\CreateServiceCommand::class,
             ]);
         }
     }

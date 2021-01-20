@@ -72,7 +72,7 @@ class CreateRepositoryCommand extends Command
         $template = file_get_contents(dirname(__FILE__) . '/stubs/repository.stub');
         $source = str_replace('{{namespace}}', $namespace, $template);
         $source = str_replace('{{class_name}}', $class_name, $source);
-        $source = str_replace('{{args_name}}', lcfirst($args_name), $source);
+        $source = str_replace('{{args_name}}', $args_name, $source);
 
         //是否已存在相同文件
         if (file_exists($file)) {
