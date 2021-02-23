@@ -26,7 +26,7 @@ abstract class Repository
      */
     public function getOne(callable $where = null)
     {
-        $orm = $this->model->where('is_on', 1);
+        $orm = $this->model;
 
         //自定义条件
         CallbackTrait::callback($where, $orm);
@@ -43,7 +43,7 @@ abstract class Repository
      */
     public function getOneById($id, callable $where = null)
     {
-        $orm = $this->model->where('is_on', 1);
+        $orm = $this->model;
 
         //自定义条件
         CallbackTrait::callback($where, $orm);
@@ -60,7 +60,7 @@ abstract class Repository
      */
     public function getList(array $param = [], callable $where = null)
     {
-        $orm = $this->model->where('is_on', 1);
+        $orm = $this->model;
 
         //自定义条件
         CallbackTrait::callback($where, $orm);
@@ -74,13 +74,13 @@ abstract class Repository
      * @param $param
      * @return mixed
      */
-    public function create(array $param)
+    public function create(array $param, string $msg = '')
     {
         set_save_data($this->model, $param);
         $res = $this->model->save();
         if (!$res) {
             \DB::rollBack();
-            throw new ApiException();
+            throw new ApiException($msg);
         }
         return $this->model;
     }
@@ -92,13 +92,13 @@ abstract class Repository
      * @return bool
      * @throws \App\Exceptions\ApiException
      */
-    public function update(Model $model, array $param)
+    public function update(Model $model, array $param, string $msg = '')
     {
         set_save_data($model, $param);
         $res = $model->save();
         if (!$res) {
             \DB::rollBack();
-            throw new ApiException();
+            throw new ApiException($msg);
         }
         return $model;
     }
