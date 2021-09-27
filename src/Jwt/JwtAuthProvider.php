@@ -1,29 +1,26 @@
 <?php
 
-
 namespace Taoran\Laravel\Jwt;
 
 use Illuminate\Support\ServiceProvider;
 
 class JwtAuthProvider extends ServiceProvider
 {
+
     /**
-     * Bootstrap any application services.
+     * Bootstrap the application services.
      *
      * @return void
      */
     public function boot()
     {
+        //注册路由
         $this->registerRoute();
-    }
 
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register()
-    {
+        \Session::extend('jwt', function ($app) {
+            // Return implementation of SessionHandlerInterface...
+            return new JwtAuthSession();
+        });
 
     }
 
@@ -38,5 +35,19 @@ class JwtAuthProvider extends ServiceProvider
                 \Route::get('api/init', 'JwtAuth@routeInit');
             });
         }
+    }
+
+    /**
+     * Register the application services.
+     *
+     * @return void
+     */
+    public function register()
+    {
+        //
+        $this->app->singleton('jwt', function () {
+            return new JwtAuth;
+        });
+
     }
 }

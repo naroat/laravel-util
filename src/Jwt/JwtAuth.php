@@ -1,95 +1,136 @@
 <?php
-
-
 namespace Taoran\Laravel\Jwt;
 
-
-use Lcobucci\JWT\Builder;
-use Lcobucci\JWT\Parser;
-use Lcobucci\JWT\Signer\Hmac\Sha256;
-use Lcobucci\JWT\ValidationData;
+use Taoran\Laravel\Exception\ApiException;
+use Illuminate\Support\Arr;
+use \Firebase\JWT\JWT;
+use Carbon\Carbon;
 
 class JwtAuth
 {
-    // 加密后的token
-    private $token;
-    // 解析JWT得到的token
-    private $decodeToken;
-    // 用户ID
-    private $uid;
-    // jwt密钥
-    private $secrect = '';
+    private static $expires = 60;                   //设置单次过期时间(分钟)
+    private static $maxExpires = 60 * 24 * 30;      //最大过期时间(分钟),app使用
+    private static $seesionKey = '';                //会话key
 
-    // jwt参数
-    private $iss = '';// 该JWT的签发者
-    private $aud = '';// 配置访问群体
-    private $id = '';//配置ID
+    public static $encodeData = array();
+    public static $sessionData = array();
 
-    public function __construct() {}
+    private static $type = 'token';                 //类型: token or session
+    private static $sessionPrefix = 'session';
 
-    private function __clone() {}
+    private static $token;                          //获取到的token
 
-    /**
-     * 获取token
-     *
-     * @return array
-     */
-    public function getToken()
+    public function __construct()
     {
-        return $this->token;
+        self::$sessionPrefix = config('session.cookie');
     }
 
-
     /**
-     * 验证
-     *
+     * 验证jwt
+     * @param string $token
+     * @param object $request
      * @return bool
      */
-    public function check()
+    public function check($request, $token = '')
     {
-        //接收token
-        $this->token = $this->tryToGetToken();
-        if (!$this->token) {
+
+        //尝试获取token
+        $token = $this->tryToGetToken($request, $token);
+        if (!$token) {
             return false;
         }
 
-        //验证令牌
-        if (!$this->verify()) {
+        //session类型,直接获取token作为key
+        if (self::$type == 'session') {
+            $session_key = \Crypt::decrypt($token);
+            if (!$session_key) {
+                return false;
+            }
+            self::$seesionKey = $session_key;
+        } else {
+            try {
+                self::$encodeData = (array)JWT::decode($token, config('app.key'), array('HS256'));
+            } catch (\Exception $e) {
+                return false;
+            }
+
+            self::$seesionKey = self::$encodeData['session_key'];
+        }
+
+        //通过sessionkey获取数据
+        $data = \Cache::get(self::$sessionPrefix . ':' . self::$seesionKey);
+        if (empty($data)) {
             return false;
         }
 
-        //验证过期时间
-        if ($this->validate()['exp'] < time()) {
-            return false;
+        if (self::$type == 'token') {
+            //验证过期时间
+            if ($data['expires_time'] < time()) {
+                return false;
+            }
+
+            //过期时间
+            $expires_time = $data['device'] == 'web' ? self::$expires : self::$maxExpires;
+
+            $time = time();
+            $data['expires_time'] = $time + $expires_time * 60;
+            $data['refresh_time'] = $time;
+
+            //拥有sk字段的,需验证签名
+            if (!empty($data['sk'])) {
+                if (!$this->checkSign($data['sk'])) {
+                    return false;
+                }
+            }
+
+            \Cache::put(self::$sessionPrefix . ':' . self::$seesionKey, $data, Carbon::now()->addMinutes($expires_time));
+        } else {
+            $expires_time = config('session.lifetime');
+            $time = time();
+            $data['expires_time'] = $time + ($expires_time * 60);
+            $data['device'] = 'web_session';
+            self::$maxExpires = $expires_time;
+            \Cache::put(self::$sessionPrefix . ':' . self::$seesionKey, $data, Carbon::now()->addMinutes($expires_time));
         }
+
+        self::$sessionData = $data;
 
         return true;
     }
 
     /**
-     * 接收token
-     * @return string
+     * 获取token
+     * @param $request
+     * @param $token
+     * @return bool
      */
-    public function tryToGetToken()
+    protected function tryToGetToken($request, $token)
     {
-        if (empty($this->token)) {
-            //头信息中获取
-            $this->token = $this->getTokenByHeader();
+
+        if (empty($token)) {
+            //获取header内容
+            $token = $this->getTokenByHeader();
         }
 
-        if (empty($this->token)) {
-            //参数中获取token
-            $this->token = $this->getTokenByUrl();
-
+        if (empty($token)) {
+            //获取url上token字段上的内容
+            $token = $this->getTokenByUrl();
         }
 
-        return (string)$this->token;
+        if (empty($token)) {
+            //获取cookie上的内容
+            $token = $this->getTokenByCookie();
+            self::$type = 'session';
+        }
+
+        self::$token = $token;
+
+        return $token;
     }
 
     /**
-     * 头信息中获取token
-     *
-     * @return array|string|null
+     * 通过Header获取token
+     * @return array|string
      */
     public function getTokenByHeader()
     {
@@ -97,76 +138,235 @@ class JwtAuth
     }
 
     /**
-     * 参数中获取token
-     *
-     * @return array|string|null
+     * 通过Url获取token
+     * @return mixed
      */
     public function getTokenByUrl()
     {
-        return request()->get('token');
+        return request()->query->get('token');
     }
 
     /**
-     * 加密jwt
+     * 通过cookie获取token
+     * @return mixed
      */
-    public function encode()
+    public function getTokenByCookie()
     {
+        return request()->cookies->get(config('session.cookie'));
+    }
+
+    /**
+     * 生成token
+     * @param array $session_data
+     * @return string
+     */
+    public function createToken(array $session_data = array(), $device = '')
+    {
+        load_helper('Password');
+        $session_key = create_guid();
 
         $time = time();
-        $this->uid = create_guid();
-        $this->token = (new Builder())
-            ->setIssuer($this->iss)// Configures the issuer (iss claim)
-            ->setAudience($this->aud)// 配置访问群体
-            ->setId($this->id, true)// 配置id（jti声明），作为头项进行复制
-            ->setIssuedAt($time)// 配置令牌的颁发时间（iat声明）
-            ->setNotBefore($time + 1)// 配置令牌可以使用的时间（单位:分钟）1分钟
-            ->setExpiration($time + 60)// 配置令牌的过期时间 (单位:秒) 60秒
-            ->set('uid', $this->uid)// 配置一个名为“uid”的新声明
-            ->sign(new Sha256(), $this->secrect)// 使用secrect作为密钥创建签名
-            ->getToken(); // 检索生成的令牌
+        $expires_time = $time + (self::$expires * 60);
+        $secret_key = '';
+        $is_sign = false;
 
-        return $this->token;
-    }
+        if (empty($device)) {
+            $device = 'web';
 
-    /**
-     * 解密token
-     */
-    public function decode()
-    {
+            //判断设备类型
+            $is_app = boolval(request()->header('X-ISAPP'));
+            if ($is_app) {
+                $device = 'app';
+            }
 
-        if (!$this->decodeToken) {
-            $this->decodeToken = (new Parser())->parse((string)$this->token);
-            $this->uid = $this->decodeToken->getClaim('uid');
+            $is_sign = config('app.is_web_sign', false);
         }
-        return $this->decodeToken;
 
+        if ($device == 'app' || $is_sign) {
+            $expires_time = $time + (self::$maxExpires * 60);
+            $secret_key = create_guid();
+        }
+
+        $session_data['device'] = $device;
+        $session_data['create_at'] = $time;      //创建时间
+        $session_data['expires_time'] = $expires_time;  //过期时间
+        $session_data['sk'] = $secret_key;
+
+        $data = array(
+            'session_key' => $session_key
+        );
+
+        //过期时间
+        $session_expires_time = $device == 'web' ? self::$expires : self::$maxExpires;
+
+        \Cache::add(self::$sessionPrefix . ':' . $session_key, $session_data, Carbon::now()->addMinutes($session_expires_time));
+        return [
+            'token' => JWT::encode($data, config('app.key')),
+            'sk' => $secret_key,
+            'is_sign' => intval($is_sign),
+            'expires_time' => $session_expires_time
+        ];
     }
 
-
     /**
-     * 验证令牌是否超过有效期
-     */
-    public function validate()
-    {
-        $data = new ValidationData();
-        $data->setAudience($this->aud);
-        $data->setIssuer($this->iss);
-        $data->setId($this->id);
-        # 返回状态以及过期时间、uid
-        $res['status'] = $this->decode()->validate($data);
-        $res['exp'] = $this->decode()->getClaim('exp');
-        $res['uid'] = $this->decode()->getClaim('uid');
-        return $res;
-    }
-
-    /**
-     * 验证令牌在生成后是否被修改
+     * 设置数据
+     * @param $key
+     * @param $value
      * @return bool
      */
-    public function verify()
+    public function set($key, $value = '')
     {
-        $res = $this->decode()->verify(new Sha256(), $this->secrect);
-        return $res;
+        //获取最新数据
+        $data = \Cache::get(self::$sessionPrefix . ':' . self::$seesionKey);
+        if (empty($data)) {
+            return false;
+        }
+
+        $keys = is_array($key) ? $key : [$key => $value];
+
+        foreach ($keys as $key => $value) {
+            Arr::set($data, $key, $value);
+        }
+
+        //过期时间
+        $expires_time = $data['device'] == 'web' ? self::$expires : self::$maxExpires;
+
+        $time = time();
+        $data['expires_time'] = $time + ($expires_time * 60);
+        $data['refresh_time'] = $time;
+        \Cache::put(self::$sessionPrefix . ':' . self::$seesionKey, $data, Carbon::now()->addMinutes($expires_time));
+        self::$sessionData = $data;
+        return true;
+    }
+
+    /**
+     * 获取数据
+     * @param $key
+     * @return array | bool
+     */
+    public function get($key = '', $default = '')
+    {
+        $data = self::$sessionData;
+        if (empty($data)) {
+            return false;
+        }
+
+        if (empty($key)) {
+            return $data;
+        }
+
+        return Arr::get($data, $key, $default);
+    }
+
+    /**
+     * 删除数据
+     * @param $key
+     * @return array | bool
+     */
+    public function delete($key)
+    {
+        //获取最新数据
+        $data = \Cache::get(self::$sessionPrefix . ':' . self::$seesionKey);
+        if (empty($data)) {
+            return false;
+        }
+
+        if (!empty($key)) {
+            Arr::forget($data, $key);
+
+            //过期时间
+            $expires_time = $data['device'] == 'web' ? self::$expires : self::$maxExpires;
+
+            $time = time();
+            $data['expires_time'] = $time + ($expires_time * 60);
+            $data['refresh_time'] = $time;
+
+            \Cache::put(self::$sessionPrefix . ':' . self::$seesionKey, $data, Carbon::now()->addMinutes($expires_time));
+            self::$sessionData = $data;
+        }
+
+        return true;
+    }
+
+    /**
+     *  销毁
+     */
+    public function destroy()
+    {
+        \Cache::forget(self::$sessionPrefix . ':' . self::$seesionKey);
+        self::$sessionData = array();
+    }
+
+    /**
+     * 验证签名
+     * @param $secret_key
+     * @return bool
+     * @throws ApiException
+     */
+    public function checkSign($secret_key)
+    {
+        //验证时间
+        $timestmps = intval(request()->header('X-Hztimestmps'));
+        $maxtime = (time() + 60 * 30) * 1000;
+        $mintime = (time() - 60 * 30) * 1000;
+        if ($timestmps > $maxtime || $timestmps < $mintime) {
+            throw new ApiException('签名错误,请确保手机时间准确!', 'SGIN_ERROR');
+        }
+
+        $method = strtoupper(request()->method());  //请求方式
+        $host_and_path = request()->getHttpHost() . request()->getPathInfo();  //获取主机
+        $params = request()->input();
+
+        ksort($params);
+        $params_str = $this->toUrlParams($params);
+
+        //拼接签名字符串(请求方式/秘钥/时间戳/主机路径?请求参数)
+        $src_str = $method . '/' . $secret_key . '/' . $timestmps . '/' . $host_and_path . '?' . $params_str;
+        $signStr = base64_encode(md5($src_str));
+
+        //对比签名是否正确
+        if ($signStr != request()->header('X-Signingkey')) {
+            throw new ApiException('签名错误,请联系网站管理员!', 'SGIN_ERROR');
+        }
+
+        return true;
+    }
+
+
+    /**
+     * 格式化参数格式化成url参数
+     */
+    public function toUrlParams($values)
+    {
+        $buff = "";
+        foreach ($values as $k => $v) {
+            if ($v == '' || is_array($v) || is_object($v)) {
+                continue;
+            }
+
+            $buff .= $k . "=" . $v . "&";
+        }
+
+        $buff = trim($buff, "&");
+        return $buff;
+    }
+
+    /**
+     * 设置过期时间
+     * @param $minute
+     */
+    public function setExpires($minute)
+    {
+        self::$expires = $minute;
+    }
+
+    /**
+     * 获取token
+     * @param $minute
+     */
+    public function getToken()
+    {
+        return self::$token;
     }
 
     /**
@@ -175,12 +375,14 @@ class JwtAuth
      */
     public function routeInit()
     {
-        $token = $this->encode();
+        $token = self::createToken();
         return array(
             'result' => true,
-            'token' => (string)$token
+            'token' => $token['token'],
+            'sk' => $token['sk'],
+            'is_sign' => $token['is_sign'],
+            'expires_time' => time() + $token['expires_time'] * 60
         );
     }
 
 }
-
