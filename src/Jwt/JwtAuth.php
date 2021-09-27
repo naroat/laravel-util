@@ -162,7 +162,6 @@ class JwtAuth
      */
     public function createToken(array $session_data = array(), $device = '')
     {
-        load_helper('Password');
         $session_key = create_guid();
 
         $time = time();
