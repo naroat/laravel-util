@@ -77,7 +77,7 @@ class Handler
             }
 
             //响应
-            return $reponse->handle([], $status_code);
+            return $reponse->handle([], [], $status_code);
         } else {
             return $obj->renderByParent($request, $exception);
         }
