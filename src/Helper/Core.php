@@ -3,9 +3,9 @@
  * json响应
  */
 if (!function_exists('response_json')) {
-    function response_json($data = [], $code = 200)
+    function response_json($data = [], $list = [], $code = 200)
     {
-        return app()->make('taoran_response')->handle($data, $code);
+        return app()->make('taoran_response')->handle($data, $list, $code);
     }
 }
 
