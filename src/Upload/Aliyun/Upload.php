@@ -49,12 +49,10 @@ class Upload extends UploadAbstract implements UploadInterface
             ]);
             //本地创建临时文件
             $tempfile = $this->createTemp($file, $filename);
-            //实例oss
-            $ossClient = new OssClient($this->accessKeyId, $this->accessKeySecret, $this->endpoint);
-            //上传
-            $ossClient->multiuploadFile($this->bucket, $object, $tempfile, $this->options);
-            //设置访问权限
-            $this->setAcl($ossClient, $object, $acl);
+
+            //直传
+            $this->uploadDirect($object, $tempfile, $acl);
+
             //清除临时文件
             $this->clearTemp($tempfile);
         } catch (OssException $e) {
@@ -62,6 +60,24 @@ class Upload extends UploadAbstract implements UploadInterface
         }
         //返回路径
         return '/' . $object;
+    }
+
+    /**
+     * 直接上传
+     *
+     * @param $object
+     * @param $tempfile
+     * @param $acl
+     * @throws OssException
+     */
+    public function uploadDirect($object, $tempfile, $acl)
+    {
+        //实例oss
+        $ossClient = new OssClient($this->accessKeyId, $this->accessKeySecret, $this->endpoint);
+        //上传
+        $ossClient->multiuploadFile($this->bucket, $object, $tempfile, $this->options);
+        //设置访问权限
+        $this->setAcl($ossClient, $object, $acl);
     }
 
     /**
